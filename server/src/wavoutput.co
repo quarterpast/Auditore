@@ -1,0 +1,3 @@
+
+class WavOutput extends process.EventEmitter
+	->
