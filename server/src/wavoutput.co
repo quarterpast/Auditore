@@ -1,3 +1,39 @@
+class exports.WavOutput extends process.EventEmitter
+	RIFF = new Buffer 'RIFF','ascii'
+	WAVE = new Buffer 'WAVE','ascii'
+	fmt = new Buffer 'fmt ','ascii'
+	data = new Buffer 'data','ascii'
 
-class WavOutput extends process.EventEmitter
-	->
+	function NumberBuf num,size=4
+		out = new Buffer size
+		out."writeInt#{size*8}LE" num
+		return out
+
+	WAVE_FORMAT_PCM = new Buffer '0001','hex'
+	(@length=30,@rate=44100,@channels=2,@bytes=2)->
+		@samples = @length*@rate*@samples
+
+		@pad = @bytes*@channels*@samples % 2
+
+		@emit \data, buf for buf in [
+			RIFF
+			NumberBuf 4+24+8+@bytes*@samples+@pad
+			WAVE
+			######
+			fmt
+			NumberBuf 16
+			WAVE_FORMAT_PCM
+			NumberBuf @channels,2
+			NumberBuf @rate
+			NumberBuf @rate*@bytes*@channels
+			NumberBuf @bytes*@channels,2
+			NumberBuf 8*Math.ceil @bytes,2
+			######
+			data
+			NumberBuf @bytes*@channels*@samples
+		]
+	resume: ->
+		for i from 0 to @samples
+			@emit \data, NumberBuf @generate i,@bytes
+	generate: ->
+		return Math.random! * Math.pow 2,@bytes*8
