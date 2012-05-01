@@ -1,39 +1,48 @@
-class exports.WavOutput extends process.EventEmitter
-	RIFF = new Buffer 'RIFF','ascii'
-	WAVE = new Buffer 'WAVE','ascii'
-	fmt = new Buffer 'fmt ','ascii'
-	data = new Buffer 'data','ascii'
+stream = require \stream
+class exports.WavOutput extends stream
+	function u32 i then return [i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF, (i>>24)&0xFF]
 
-	function NumberBuf num,size=4
-		out = new Buffer size
-		out."writeInt#{size*8}LE" num
-		return out
+	function u16 i then return [i&0xFF, (i>>8)&0xFF]
 
 	WAVE_FORMAT_PCM = new Buffer '0001','hex'
+	readable: true
 	(@length=30,@rate=44100,@channels=2,@bytes=2)->
-		@samples = @length*@rate*@samples
+		@samples = @length*@rate
 
 		@pad = @bytes*@channels*@samples % 2
+		@head = new Buffer [].concat do
+			0x52,0x49,0x46,0x46
+			u32 4+(8+16)+(8+@bytes*@samples+@pad)
+			0x57,0x41,0x56,0x45
+			######
+			0x66,0x6d,0x74,0x20
+			u32 16
+			u16 1
+			u16 @channels
+			u32 @rate
+			u32 @rate*@bytes*@channels
+			u16 @bytes*@channels
+			u16 8*Math.ceil @bytes
+			######
+			0x64,0x61,0x74,0x61
+			u32 @bytes*@channels*@samples
 
-		@emit \data, buf for buf in [
-			RIFF
-			NumberBuf 4+24+8+@bytes*@samples+@pad
-			WAVE
-			######
-			fmt
-			NumberBuf 16
-			WAVE_FORMAT_PCM
-			NumberBuf @channels,2
-			NumberBuf @rate
-			NumberBuf @rate*@bytes*@channels
-			NumberBuf @bytes*@channels,2
-			NumberBuf 8*Math.ceil @bytes,2
-			######
-			data
-			NumberBuf @bytes*@channels*@samples
-		]
+	readable: true
 	resume: ->
-		for i from 0 to @samples
-			@emit \data, NumberBuf @generate i,@bytes
+		@emit \data, @head
+
+		@emit \data, new Buffer	while @cursor is not @samples
+			
+			@generate @cursor
+			@cursor++
 	generate: ->
-		return Math.random! * Math.pow 2,@bytes*8
+		console.log it if it is @samples
+		return Math.floor Math.random! * Math.pow 2,@bytes
+
+if module is require.main
+	fs = require \fs
+	out = fs.createWriteStream "test.wav"
+	wav = new WavOutput
+	wav.pipe out
+	wav.on \end,process.exit
+	wav.resume!
