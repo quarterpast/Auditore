@@ -55,10 +55,3 @@ class exports.WavOutput extends Stream
 
 	generate: (i,out)->
 		out Math.floor Math.random! * Math.pow 2,@bytes*8
-
-if module is require.main
-	fs = require \fs
-	out = fs.createWriteStream "test.wav"
-	wav = new WavOutput
-	wav.pipe out
-	wav.resume!

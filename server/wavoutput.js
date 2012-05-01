@@ -1,5 +1,5 @@
 (function(){
-  var Stream, WavOutput, fs, out, wav;
+  var Stream, WavOutput;
   Stream = require('stream');
   exports.WavOutput = WavOutput = (function(superclass){
     WavOutput.displayName = 'WavOutput';
@@ -61,13 +61,6 @@
     };
     return WavOutput;
   }(Stream));
-  if (module === require.main) {
-    fs = require('fs');
-    out = fs.createWriteStream("test.wav");
-    wav = new WavOutput;
-    wav.pipe(out);
-    wav.resume();
-  }
   function __extend(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;
