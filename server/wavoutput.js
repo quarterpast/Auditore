@@ -50,7 +50,7 @@
         }
         _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](it, _this.off);
         _this.off += _this.bytes;
-        if (_this.cursor === _this.samples) {
+        if (_this.cursor === _this.samples * _this.channels) {
           _this.emit('end');
         }
         if (!_this.paused) {

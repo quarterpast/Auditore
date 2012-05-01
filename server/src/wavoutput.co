@@ -49,7 +49,7 @@ class exports.WavOutput extends Stream
 				@off = 0
 			@runningBuf."writeUInt#{@bytes*8}LE" it,@off
 			@off += @bytes
-			@emit \end if @cursor is @samples
+			@emit \end if @cursor is @samples*@channels
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
