@@ -14,10 +14,10 @@
     prototype.phase = 0;
     prototype.generate = function(t){
       var y;
-      superclass.prototype.generate.apply(this, arguments);
       y = this.phase < this.work * Math.PI
         ? this.A
         : -this.A;
+      superclass.prototype.generate.apply(this, arguments);
       return [y, y];
     };
     return Square;

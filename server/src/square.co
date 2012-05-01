@@ -5,6 +5,6 @@ class exports.Square extends Phase
 	rawphase:0
 	phase:0
 	generate: (t)->
-		super ...
 		y = if @phase < @work*Math.PI then @A else -@A
+		super ...
 		[y,y]
