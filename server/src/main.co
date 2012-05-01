@@ -2,6 +2,8 @@
 {Reader} = require \q-io
 {WavOutput} = require "./wavoutput"
 Coco = require \coco
+cluster = require \cluster
+os = require \os
 
 conf = {
 	port:8002
@@ -9,18 +11,21 @@ conf = {
 	"return "+process.argv.slice 2 .join " " or "{}"
 	{+bare}
 
-app = Serve do
-	"/": (req)-> 
-		Template "app/home.eco" .render!
-	"/sound": ->
-		wav = new WavOutput
-		body: Reader wav
-		status: 200
-		headers:
-			\content-type :"audio/wave"
-			\content-length : wav.byteLength
+if cluster.isMaster
+	cluster.fork! for cpu of os.cpus!
+else
+	app = Serve do
+		"/": (req)-> 
+			Template "app/home.eco" .render!
+		"/sound": ->
+			wav = new WavOutput
+			body: Reader wav
+			status: 200
+			headers:
+				\content-type :"audio/wave"
+				\content-length : wav.byteLength
 
-	"/favicon.ico": ->Redirect "client/favicon.png"
-	"/static/(.*)": Static.dir "client"
-app.listen conf.port,conf.host
-console.log "Listening on #{conf.host or '*'}:#{conf.port}"
+		"/favicon.ico": ->Redirect "client/favicon.png"
+		"/static/(.*)": Static.dir "client"
+	app.listen conf.port,conf.host
+	console.log "#{process.pid} listening on #{conf.host or '*'}:#{conf.port}"

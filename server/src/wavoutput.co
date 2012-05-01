@@ -5,12 +5,13 @@ class exports.WavOutput extends Stream
 
 	function u16 i then return [i&0xFF, (i>>8)&0xFF]
 
-	WAVE_FORMAT_PCM = new Buffer '0001','hex'
+	CHUNK_SIZE = 400
+
 	readable: true
 	(@length=30,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
 		@byteLength = @bytes*@channels*@samples
-		@runningBuf = new Buffer @bytes*@channels*100
+		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46
@@ -43,13 +44,13 @@ class exports.WavOutput extends Stream
 
 	tick: ->
 		@generate @cursor++, ~>
-			if @off >= @bytes*@channels*100
+			if @off >= @bytes*@channels*CHUNK_SIZE
 				@emit \data, @runningBuf
-				@runningBuf = new Buffer @bytes*@channels*100
+				@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 				@off = 0
 			@runningBuf."writeUInt#{@bytes*8}LE" it,@off
 			@off += @bytes
-			@emit \end if @cursor is @samples*@channels
+			@emit \end if @cursor is @samples
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
