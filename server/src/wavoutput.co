@@ -28,17 +28,16 @@ class exports.WavOutput extends Stream
 			######
 			0x64,0x61,0x74,0x61
 			u32 @bytes*@channels*@samples
+		process.nextTick ~> @emit \data, @head
+		process.nextTick @~tick
 	headless: true
 	readable: true
-	paused: true
+	paused: false
 	cursor: 0
 	off:0
 	pause: ->@paused = true
 
 	resume: ->
-		if @headless
-			@emit \data, @head
-			@headless = false
 		@paused = false
 		process.nextTick @~tick
 
