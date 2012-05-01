@@ -29,11 +29,8 @@
       });
       process.nextTick(__bind(this, 'tick'));
     }
-    prototype.headless = true;
     prototype.readable = true;
     prototype.paused = false;
-    prototype.cursor = 0;
-    prototype.off = 0;
     prototype.pause = function(){
       return this.paused = true;
     };
@@ -41,9 +38,16 @@
       this.paused = false;
       return process.nextTick(__bind(this, 'tick'));
     };
+    prototype.normalise = function(it){
+      return (1 + it) * Math.pow(2, this.bytes * 8 - 1);
+    };
+    prototype.cursor = 0;
+    prototype.off = 0;
     prototype.tick = function(){
       var _this = this;
       return this.generate(this.cursor++, function(l, r){
+        var _ref, _ref2;
+        _ref2 = [(_ref = _this.normalise)[l], _ref[r]], l = _ref2[0], r = _ref2[1];
         if (_this.off >= _this.bytes * _this.channels * CHUNK_SIZE) {
           _this.emit('data', _this.runningBuf);
           _this.runningBuf = new Buffer(_this.bytes * _this.channels * CHUNK_SIZE);
@@ -62,7 +66,7 @@
       });
     };
     prototype.generate = function(i, out){
-      return out(Math.floor(Math.random() * this.amplitude), Math.floor(Math.random() * this.amplitude));
+      return out(Math.random(), Math.random());
     };
     return WavOutput;
   }(Stream));

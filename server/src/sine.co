@@ -1,7 +1,9 @@
 {WavOutput} = require "./wavoutput"
 
 class exports.Sine extends WavOutput
-	-> super ...
+	(l,@A,@f)-> super l
+	phase:0
 	generate: (t,out)->
-		s = Math.floor (1+Math.sin t/100) * @amplitude/8
+		y = @A * Math.sin(@phase)
+		@phase += 2*Math.PI*@f/@rate
 		out s,s

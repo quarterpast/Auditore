@@ -33,19 +33,19 @@ class exports.WavOutput extends Stream
 			u32 @bytes*@channels*@samples
 		process.nextTick ~> @emit \data, @head
 		process.nextTick @~tick
-	headless: true
 	readable: true
 	paused: false
-	cursor: 0
-	off:0
 	pause: ->@paused = true
-
 	resume: ->
 		@paused = false
 		process.nextTick @~tick
-
+	normalise: -> (1+it)*Math.pow 2,@bytes*8-1
+	# [-1,1] -> [0,2^@bytes*8]
+	cursor: 0
+	off:0
 	tick: ->
 		@generate @cursor++, (l,r)~>
+			[l,r] = @normalise[l,r]
 			if @off >= @bytes*@channels*CHUNK_SIZE
 				@emit \data, @runningBuf
 				@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
@@ -58,4 +58,4 @@ class exports.WavOutput extends Stream
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
-		out (Math.floor Math.random! * @amplitude), (Math.floor Math.random! * @amplitude)
+		out Math.random!, Math.random!
