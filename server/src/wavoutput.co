@@ -5,14 +5,14 @@ class exports.WavOutput extends Stream
 
 	function u16 i then return [i&0xFF, (i>>8)&0xFF]
 
-	CHUNK_SIZE = 400
+	CHUNK_SIZE = 800
 
 	readable: true
 	(@length=30,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
-		@byteLength = @bytes*@channels*@samples
 		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
+		@byteLength = 4+(8+16)+(8+@bytes*@samples+@pad)
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46
 			u32 4+(8+16)+(8+@bytes*@samples+@pad)
@@ -50,7 +50,7 @@ class exports.WavOutput extends Stream
 				@off = 0
 			@runningBuf."writeUInt#{@bytes*8}LE" it,@off
 			@off += @bytes
-			@emit \end if @cursor is @samples
+			@emit \end if @cursor is @samples*@channels
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
