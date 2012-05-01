@@ -1,6 +1,7 @@
 {Serve,Static,Redirect,Template} = require \sabor
 {Reader} = require \q-io
 {WavOutput} = require "./wavoutput"
+{Sine} = require "./sine"
 Coco = require \coco
 cluster = require \cluster
 os = require \os
@@ -17,8 +18,8 @@ else
 	app = Serve do
 		"/": (req)-> 
 			Template "app/home.eco" .render!
-		"/sound": ->
-			wav = new WavOutput
+		"/sound": (req,length)->
+			wav = new Sine length
 			body: Reader wav
 			status: 200
 			headers:

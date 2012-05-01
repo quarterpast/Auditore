@@ -13,6 +13,8 @@ class exports.WavOutput extends Stream
 		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
 		@byteLength = 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
+
+		@amplitude = Math.pow 2,@bytes*8
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46
 			u32 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
@@ -54,4 +56,4 @@ class exports.WavOutput extends Stream
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
-		out Math.floor Math.random! * Math.pow 2,@bytes*8
+		out Math.floor Math.random! * @amplitude
