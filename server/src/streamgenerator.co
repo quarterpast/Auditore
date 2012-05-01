@@ -1,0 +1,34 @@
+Stream = require \stream
+
+class exports.StreamGenerator extends Stream
+	CHUNK_SIZE = 800
+	readable: true
+	paused: false
+	-> process.nextTick @~tick
+	pause: ->@paused = true
+	resume: ->
+		@paused = false
+		process.nextTick @~tick
+	normalise: -> Math.floor ((1+it)*Math.pow 2,@bytes*8-1)
+	# [-1,1] -> [0,2^@bytes*8]
+	cursor:0
+	soundoff:0
+	off:0
+	tick: ->
+		[l,r] = @generate @cursor++
+		l = @normalise l
+		r = @normalise r
+		if @off >= @bytes*@channels*CHUNK_SIZE
+			@emit \data, @runningBuf
+			@runningBuf.copy @soundBuf,@soundoff
+			@soundoff += @runningBuf.length
+			@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
+			@off = 0
+		@runningBuf."writeUInt#{@bytes*8}LE" l,@off
+		@off += @bytes
+		@runningBuf."writeUInt#{@bytes*8}LE" r,@off
+		@off += @bytes
+		@emit \end,@soundBuf if @cursor is @samples
+		process.nextTick @~tick unless @paused
+
+	generate: (i,out)-> [Math.random!, Math.random!]

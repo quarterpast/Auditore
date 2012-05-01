@@ -3,15 +3,15 @@
   Stream = require('stream');
   exports.WavOutput = WavOutput = (function(superclass){
     WavOutput.displayName = 'WavOutput';
-    var CHUNK_SIZE, prototype = __extend(WavOutput, superclass).prototype, constructor = WavOutput;
+    var prototype = __extend(WavOutput, superclass).prototype, constructor = WavOutput;
     function u32(i){
       return [i & 0xFF, i >> 8 & 0xFF, i >> 16 & 0xFF, i >> 24 & 0xFF];
     }
     function u16(i){
       return [i & 0xFF, i >> 8 & 0xFF];
     }
-    CHUNK_SIZE = 800;
     prototype.readable = true;
+    prototype.writable = true;
     function WavOutput(length, rate, channels, bytes){
       var _this = this;
       this.length = length != null ? length : 120;
@@ -22,50 +22,25 @@
       this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
       this.pad = this.bytes * this.channels * this.samples % 2;
       this.byteLength = 4 + (8 + 16) + (8 + this.bytes * this.channels * this.samples + this.pad);
+      this.soundBuf = new Buffer(this.byteLength);
       this.amplitude = Math.pow(2, this.bytes * 8);
       this.head = new Buffer([].concat(0x52, 0x49, 0x46, 0x46, u32(4 + (8 + 16) + (8 + this.bytes * this.channels * this.samples + this.pad)), 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, u32(16), u16(1), u16(this.channels), u32(this.rate), u32(this.rate * this.bytes * this.channels), u16(this.bytes * this.channels), u16(8 * Math.ceil(this.bytes)), 0x64, 0x61, 0x74, 0x61, u32(this.bytes * this.channels * this.samples)));
       process.nextTick(function(){
         return _this.emit('data', _this.head);
       });
-      process.nextTick(__bind(this, 'tick'));
     }
-    prototype.readable = true;
-    prototype.paused = false;
-    prototype.pause = function(){
-      return this.paused = true;
-    };
-    prototype.resume = function(){
-      this.paused = false;
-      return process.nextTick(__bind(this, 'tick'));
-    };
-    prototype.normalise = function(it){
-      return Math.floor((1 + it) * Math.pow(2, this.bytes * 8 - 1));
-    };
-    prototype.cursor = 0;
-    prototype.off = 0;
-    prototype.tick = function(){
-      var l, r, _ref;
-      _ref = this.generate(this.cursor++), l = _ref[0], r = _ref[1];
-      l = this.normalise(l);
-      r = this.normalise(r);
-      if (this.off >= this.bytes * this.channels * CHUNK_SIZE) {
-        this.emit('data', this.runningBuf);
-        this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
-        this.off = 0;
+    prototype.end = function(chunk){
+      if (chunk != null) {
+        write.apply(this, arguments);
       }
-      this.runningBuf["writeUInt" + this.bytes * 8 + "LE"](l, this.off);
-      this.off += this.bytes;
-      this.runningBuf["writeUInt" + this.bytes * 8 + "LE"](r, this.off);
-      this.off += this.bytes;
-      if (this.cursor === this.samples) {
-        this.emit('end');
-      }
-      if (!this.paused) {
-        return process.nextTick(__bind(this, 'tick'));
-      }
+      return this.emit('end');
     };
-    prototype.generate = function(i, out){
-      return [Math.random(), Math.random()];
+    prototype.write = function(chunk, enc){
+      if (enc != null && chunk instanceof String) {
+        chunk = new Buffer(chunk, enc);
+      }
+      this.emit('data', chunk);
+      return true;
     };
     return WavOutput;
   }(Stream));
@@ -74,8 +49,5 @@
     (sub.prototype = new fun).constructor = sub;
     if (typeof sup.extended == 'function') sup.extended(sub);
     return sub;
-  }
-  function __bind(obj, key){
-    return function(){ return obj[key].apply(obj, arguments) };
   }
 }).call(this);

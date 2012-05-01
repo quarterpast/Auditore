@@ -6,15 +6,15 @@ class exports.WavOutput extends Stream
 	function u16 i then
 		[i&0xFF, (i>>8)&0xFF]
 
-	CHUNK_SIZE = 800
-
 	readable: true
+	writable: true
+
 	(@length=120,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
 		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
 		@byteLength = 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
-
+		@soundBuf = new Buffer @byteLength
 		@amplitude = Math.pow 2,@bytes*8
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46 # RIFF
@@ -33,30 +33,13 @@ class exports.WavOutput extends Stream
 			0x64,0x61,0x74,0x61 # data
 			u32 @bytes*@channels*@samples
 		process.nextTick ~> @emit \data, @head
-		process.nextTick @~tick
-	readable: true
-	paused: false
-	pause: ->@paused = true
-	resume: ->
-		@paused = false
-		process.nextTick @~tick
-	normalise: -> Math.floor ((1+it)*Math.pow 2,@bytes*8-1)
-	# [-1,1] -> [0,2^@bytes*8]
-	cursor: 0
-	off:0
-	tick: ->
-		[l,r] = @generate @cursor++
-		l = @normalise l
-		r = @normalise r
-		if @off >= @bytes*@channels*CHUNK_SIZE
-			@emit \data, @runningBuf
-			@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
-			@off = 0
-		@runningBuf."writeUInt#{@bytes*8}LE" l,@off
-		@off += @bytes
-		@runningBuf."writeUInt#{@bytes*8}LE" r,@off
-		@off += @bytes
-		@emit \end if @cursor is @samples
-		process.nextTick @~tick unless @paused
 
-	generate: (i,out)-> [Math.random!, Math.random!]
+	end: (chunk)->
+		write ... if chunk?
+		@emit \end
+
+	write: (chunk,enc)->
+		if enc? and chunk instanceof String
+			chunk = new Buffer chunk,enc
+		@emit \data, chunk
+		return true
