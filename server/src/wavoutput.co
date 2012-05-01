@@ -12,10 +12,10 @@ class exports.WavOutput extends Stream
 		@samples = @length*@rate
 		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
-		@byteLength = 4+(8+16)+(8+@bytes*@samples+@pad)
+		@byteLength = 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46
-			u32 4+(8+16)+(8+@bytes*@samples+@pad)
+			u32 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
 			0x57,0x41,0x56,0x45
 			######
 			0x66,0x6d,0x74,0x20
