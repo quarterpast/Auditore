@@ -1,0 +1,20 @@
+{Serve,Static,Redirect,Template} = require \sabor
+{Reader} = require \q-io
+{WavOutput} = require "./wavoutput"
+
+conf = {
+	port:8002
+} <<< Coco.run do
+	"return "+process.argv.slice 2 .join " " or "{}"
+	{+bare}
+
+app = Serve do
+	"/": (req)-> 
+		Template "app/home.eco" .render!
+	"/sound": ->
+		Reader new WavOutput
+
+	"/favicon.ico": ->Redirect "client/favicon.png"
+	"/static/(.*)": Static.dir "client"
+app.listen conf.port,conf.host
+console.log "Listening on #{conf.host or '*'}:#{conf.port}"
