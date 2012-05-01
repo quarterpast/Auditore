@@ -20,9 +20,7 @@
       this.bytes = bytes != null ? bytes : 2;
       this.on('pipe', function(src){
         _this.head = new Buffer([].concat(0x52, 0x49, 0x46, 0x46, u32(src.byteLength), 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, u32(16), u16(1), u16(src.channels), u32(src.rate), u32(src.rate * src.bytes * src.channels), u16(src.bytes * src.channels), u16(8 * Math.ceil(src.bytes)), 0x64, 0x61, 0x74, 0x61, u32(src.bytes * src.channels * src.samples)));
-        return process.nextTick(function(){
-          return _this.emit('data', _this.head);
-        });
+        return _this.emit('data', _this.head);
       });
     }
     prototype.end = function(chunk){

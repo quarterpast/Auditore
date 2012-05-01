@@ -27,7 +27,7 @@ class exports.WavOutput extends Stream
 				######
 				0x64,0x61,0x74,0x61 # data
 				u32 src.bytes*src.channels*src.samples
-			process.nextTick ~> @emit \data, @head
+			@emit \data, @head
 
 	end: (chunk)->
 		write ... if chunk?
