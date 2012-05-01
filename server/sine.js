@@ -8,7 +8,9 @@
       superclass.apply(this, arguments);
     }
     prototype.generate = function(t, out){
-      return out(Math.floor((1 + Math.sin(t / 100)) * this.amplitude / 8));
+      var s;
+      s = Math.floor((1 + Math.sin(t / 100)) * this.amplitude / 8);
+      return out(s, s);
     };
     return Sine;
   }(WavOutput));

@@ -43,15 +43,17 @@
     };
     prototype.tick = function(){
       var _this = this;
-      return this.generate(this.cursor++, function(it){
+      return this.generate(this.cursor++, function(l, r){
         if (_this.off >= _this.bytes * _this.channels * CHUNK_SIZE) {
           _this.emit('data', _this.runningBuf);
           _this.runningBuf = new Buffer(_this.bytes * _this.channels * CHUNK_SIZE);
           _this.off = 0;
         }
-        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](it, _this.off);
+        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](l, _this.off);
         _this.off += _this.bytes;
-        if (_this.cursor === _this.samples * _this.channels) {
+        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](r, _this.off);
+        _this.off += _this.bytes;
+        if (_this.cursor === _this.samples) {
           _this.emit('end');
         }
         if (!_this.paused) {
@@ -60,7 +62,7 @@
       });
     };
     prototype.generate = function(i, out){
-      return out(Math.floor(Math.random() * this.amplitude));
+      return out(Math.floor(Math.random() * this.amplitude), Math.floor(Math.random() * this.amplitude));
     };
     return WavOutput;
   }(Stream));

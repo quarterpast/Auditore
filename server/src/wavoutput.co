@@ -45,15 +45,17 @@ class exports.WavOutput extends Stream
 		process.nextTick @~tick
 
 	tick: ->
-		@generate @cursor++, ~>
+		@generate @cursor++, (l,r)~>
 			if @off >= @bytes*@channels*CHUNK_SIZE
 				@emit \data, @runningBuf
 				@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 				@off = 0
-			@runningBuf."writeUInt#{@bytes*8}LE" it,@off
+			@runningBuf."writeUInt#{@bytes*8}LE" l,@off
 			@off += @bytes
-			@emit \end if @cursor is @samples*@channels
+			@runningBuf."writeUInt#{@bytes*8}LE" r,@off
+			@off += @bytes
+			@emit \end if @cursor is @samples
 			process.nextTick @~tick unless @paused
 
 	generate: (i,out)->
-		out Math.floor Math.random! * @amplitude
+		out (Math.floor Math.random! * @amplitude), (Math.floor Math.random! * @amplitude)
