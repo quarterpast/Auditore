@@ -9,7 +9,7 @@ class exports.WavOutput extends Stream
 	readable: true
 	(@length=30,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
-
+		@byteLength = @bytes*@channels*@samples
 		@runningBuf = new Buffer @bytes*@channels*100
 		@pad = @bytes*@channels*@samples % 2
 		@head = new Buffer [].concat do

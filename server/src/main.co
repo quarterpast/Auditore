@@ -1,6 +1,7 @@
 {Serve,Static,Redirect,Template} = require \sabor
 {Reader} = require \q-io
 {WavOutput} = require "./wavoutput"
+Coco = require \coco
 
 conf = {
 	port:8002
@@ -12,7 +13,12 @@ app = Serve do
 	"/": (req)-> 
 		Template "app/home.eco" .render!
 	"/sound": ->
-		Reader new WavOutput
+		wav = new WavOutput
+		body: Reader wav
+		status: 200
+		headers:
+			\content-type :"audio/wave"
+			\content-length : wav.byteLength
 
 	"/favicon.ico": ->Redirect "client/favicon.png"
 	"/static/(.*)": Static.dir "client"

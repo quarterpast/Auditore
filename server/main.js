@@ -1,8 +1,9 @@
 (function(){
-  var Serve, Static, Redirect, Template, Reader, WavOutput, conf, app, _ref;
+  var Serve, Static, Redirect, Template, Reader, WavOutput, Coco, conf, app, _ref;
   _ref = require('sabor'), Serve = _ref.Serve, Static = _ref.Static, Redirect = _ref.Redirect, Template = _ref.Template;
   Reader = require('q-io').Reader;
   WavOutput = require("./wavoutput").WavOutput;
+  Coco = require('coco');
   conf = __import({
     port: 8002
   }, Coco.run("return " + process.argv.slice(2).join(" ") || "{}", {
@@ -13,7 +14,16 @@
       return Template("app/home.eco").render();
     },
     "/sound": function(){
-      return Reader(new WavOutput);
+      var wav;
+      wav = new WavOutput;
+      return {
+        body: Reader(wav),
+        status: 200,
+        headers: {
+          'content-type': "audio/wave",
+          'content-length': wav.byteLength
+        }
+      };
     },
     "/favicon.ico": function(){
       return Redirect("client/favicon.png");
