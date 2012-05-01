@@ -1,0 +1,2 @@
+#{extend "app/base.eco"}
+<audio controls src="/sound"></audio>
