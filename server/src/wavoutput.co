@@ -1,5 +1,6 @@
-stream = require \stream
-class exports.WavOutput extends stream
+Stream = require \stream
+
+class exports.WavOutput extends Stream
 	function u32 i then return [i&0xFF, (i>>8)&0xFF, (i>>16)&0xFF, (i>>24)&0xFF]
 
 	function u16 i then return [i&0xFF, (i>>8)&0xFF]
@@ -9,6 +10,7 @@ class exports.WavOutput extends stream
 	(@length=30,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
 
+		@runningBuf = new Buffer @bytes*@channels*100
 		@pad = @bytes*@channels*@samples % 2
 		@head = new Buffer [].concat do
 			0x52,0x49,0x46,0x46
@@ -26,23 +28,37 @@ class exports.WavOutput extends stream
 			######
 			0x64,0x61,0x74,0x61
 			u32 @bytes*@channels*@samples
-
+	headless: true
 	readable: true
-	resume: ->
-		@emit \data, @head
+	paused: true
+	cursor: 0
+	off:0
+	pause: ->@paused = true
 
-		@emit \data, new Buffer	while @cursor is not @samples
-			
-			@generate @cursor
-			@cursor++
-	generate: ->
-		console.log it if it is @samples
-		return Math.floor Math.random! * Math.pow 2,@bytes
+	resume: ->
+		if @headless
+			@emit \data, @head
+			@headless = false
+		@paused = false
+		process.nextTick @~tick
+
+	tick: ->
+		@generate @cursor++, ~>
+			if @off >= @bytes*@channels*100
+				@emit \data, @runningBuf
+				@runningBuf = new Buffer @bytes*@channels*100
+				@off = 0
+			@runningBuf."writeUInt#{@bytes*8}LE" it,@off
+			@off += @bytes
+			@emit \end if @cursor is @samples
+			process.nextTick @~tick unless @paused
+
+	generate: (i,out)->
+		out Math.floor Math.random! * Math.pow 2,@bytes*8
 
 if module is require.main
 	fs = require \fs
 	out = fs.createWriteStream "test.wav"
 	wav = new WavOutput
 	wav.pipe out
-	wav.on \end,process.exit
 	wav.resume!

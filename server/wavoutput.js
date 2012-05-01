@@ -1,6 +1,6 @@
 (function(){
-  var stream, WavOutput, fs, out, wav;
-  stream = require('stream');
+  var Stream, WavOutput, fs, out, wav;
+  Stream = require('stream');
   exports.WavOutput = WavOutput = (function(superclass){
     WavOutput.displayName = 'WavOutput';
     var WAVE_FORMAT_PCM, prototype = __extend(WavOutput, superclass).prototype, constructor = WavOutput;
@@ -18,35 +18,54 @@
       this.channels = channels != null ? channels : 2;
       this.bytes = bytes != null ? bytes : 2;
       this.samples = this.length * this.rate;
+      this.runningBuf = new Buffer(this.bytes * this.channels * 100);
       this.pad = this.bytes * this.channels * this.samples % 2;
       this.head = new Buffer([].concat(0x52, 0x49, 0x46, 0x46, u32(4 + (8 + 16) + (8 + this.bytes * this.samples + this.pad)), 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, u32(16), u16(1), u16(this.channels), u32(this.rate), u32(this.rate * this.bytes * this.channels), u16(this.bytes * this.channels), u16(8 * Math.ceil(this.bytes)), 0x64, 0x61, 0x74, 0x61, u32(this.bytes * this.channels * this.samples)));
     }
+    prototype.headless = true;
     prototype.readable = true;
-    prototype.resume = function(){
-      var i;
-      this.emit('data', this.head);
-      return this.emit('data', new Buffer((function(){
-        var _to, _results = [];
-        for (i = 0, _to = this.samples; i <= _to; ++i) {
-          _results.push(this.generate(i));
-        }
-        return _results;
-      }.call(this))));
+    prototype.paused = true;
+    prototype.cursor = 0;
+    prototype.off = 0;
+    prototype.pause = function(){
+      return this.paused = true;
     };
-    prototype.generate = function(it){
-      if (it === this.samples) {
-        console.log(it);
+    prototype.resume = function(){
+      if (this.headless) {
+        this.emit('data', this.head);
+        this.headless = false;
       }
-      return Math.floor(Math.random() * Math.pow(2, this.bytes));
+      this.paused = false;
+      return process.nextTick(__bind(this, 'tick'));
+    };
+    prototype.tick = function(){
+      var _this = this;
+      return this.generate(this.cursor++, function(it){
+        if (_this.off >= _this.bytes * _this.channels * 100) {
+          _this.emit('data', _this.runningBuf);
+          _this.runningBuf = new Buffer(_this.bytes * _this.channels * 100);
+          _this.off = 0;
+        }
+        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](it, _this.off);
+        _this.off += _this.bytes;
+        if (_this.cursor === _this.samples) {
+          _this.emit('end');
+        }
+        if (!_this.paused) {
+          return process.nextTick(__bind(_this, 'tick'));
+        }
+      });
+    };
+    prototype.generate = function(i, out){
+      return out(Math.floor(Math.random() * Math.pow(2, this.bytes * 8)));
     };
     return WavOutput;
-  }(stream));
+  }(Stream));
   if (module === require.main) {
     fs = require('fs');
     out = fs.createWriteStream("test.wav");
     wav = new WavOutput;
     wav.pipe(out);
-    wav.on('end', process.exit);
     wav.resume();
   }
   function __extend(sub, sup){
@@ -54,5 +73,8 @@
     (sub.prototype = new fun).constructor = sub;
     if (typeof sup.extended == 'function') sup.extended(sub);
     return sub;
+  }
+  function __bind(obj, key){
+    return function(){ return obj[key].apply(obj, arguments) };
   }
 }).call(this);
