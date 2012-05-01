@@ -18,15 +18,11 @@
       this.rate = rate != null ? rate : 44100;
       this.channels = channels != null ? channels : 2;
       this.bytes = bytes != null ? bytes : 2;
-      this.samples = this.length * this.rate;
-      this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
-      this.pad = this.bytes * this.channels * this.samples % 2;
-      this.byteLength = 4 + (8 + 16) + (8 + this.bytes * this.channels * this.samples + this.pad);
-      this.soundBuf = new Buffer(this.byteLength);
-      this.amplitude = Math.pow(2, this.bytes * 8);
-      this.head = new Buffer([].concat(0x52, 0x49, 0x46, 0x46, u32(4 + (8 + 16) + (8 + this.bytes * this.channels * this.samples + this.pad)), 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, u32(16), u16(1), u16(this.channels), u32(this.rate), u32(this.rate * this.bytes * this.channels), u16(this.bytes * this.channels), u16(8 * Math.ceil(this.bytes)), 0x64, 0x61, 0x74, 0x61, u32(this.bytes * this.channels * this.samples)));
-      process.nextTick(function(){
-        return _this.emit('data', _this.head);
+      this.on('pipe', function(src){
+        _this.head = new Buffer([].concat(0x52, 0x49, 0x46, 0x46, u32(src.byteLength), 0x57, 0x41, 0x56, 0x45, 0x66, 0x6d, 0x74, 0x20, u32(16), u16(1), u16(src.channels), u32(src.rate), u32(src.rate * src.bytes * src.channels), u16(src.bytes * src.channels), u16(8 * Math.ceil(src.bytes)), 0x64, 0x61, 0x74, 0x61, u32(src.bytes * src.channels * src.samples)));
+        return process.nextTick(function(){
+          return _this.emit('data', _this.head);
+        });
       });
     }
     prototype.end = function(chunk){
