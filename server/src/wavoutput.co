@@ -8,7 +8,7 @@ class exports.WavOutput extends Stream
 	CHUNK_SIZE = 800
 
 	readable: true
-	(@length=30,@rate=44100,@channels=2,@bytes=2)->
+	(@length=120,@rate=44100,@channels=2,@bytes=2)->
 		@samples = @length*@rate
 		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 		@pad = @bytes*@channels*@samples % 2
@@ -16,11 +16,11 @@ class exports.WavOutput extends Stream
 
 		@amplitude = Math.pow 2,@bytes*8
 		@head = new Buffer [].concat do
-			0x52,0x49,0x46,0x46
+			0x52,0x49,0x46,0x46 # RIFF
 			u32 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
-			0x57,0x41,0x56,0x45
+			0x57,0x41,0x56,0x45 # WAVE
 			######
-			0x66,0x6d,0x74,0x20
+			0x66,0x6d,0x74,0x20 # fmt 
 			u32 16
 			u16 1
 			u16 @channels
@@ -29,7 +29,7 @@ class exports.WavOutput extends Stream
 			u16 @bytes*@channels
 			u16 8*Math.ceil @bytes
 			######
-			0x64,0x61,0x74,0x61
+			0x64,0x61,0x74,0x61 # data
 			u32 @bytes*@channels*@samples
 		process.nextTick ~> @emit \data, @head
 		process.nextTick @~tick
@@ -39,23 +39,23 @@ class exports.WavOutput extends Stream
 	resume: ->
 		@paused = false
 		process.nextTick @~tick
-	normalise: -> (1+it)*Math.pow 2,@bytes*8-1
+	normalise: -> Math.floor ((1+it)*Math.pow 2,@bytes*8-1)
 	# [-1,1] -> [0,2^@bytes*8]
 	cursor: 0
 	off:0
 	tick: ->
-		@generate @cursor++, (l,r)~>
-			[l,r] = @normalise[l,r]
-			if @off >= @bytes*@channels*CHUNK_SIZE
-				@emit \data, @runningBuf
-				@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
-				@off = 0
-			@runningBuf."writeUInt#{@bytes*8}LE" l,@off
-			@off += @bytes
-			@runningBuf."writeUInt#{@bytes*8}LE" r,@off
-			@off += @bytes
-			@emit \end if @cursor is @samples
-			process.nextTick @~tick unless @paused
+		[l,r] = @generate @cursor++
+		l = @normalise l
+		r = @normalise r
+		if @off >= @bytes*@channels*CHUNK_SIZE
+			@emit \data, @runningBuf
+			@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
+			@off = 0
+		@runningBuf."writeUInt#{@bytes*8}LE" l,@off
+		@off += @bytes
+		@runningBuf."writeUInt#{@bytes*8}LE" r,@off
+		@off += @bytes
+		@emit \end if @cursor is @samples
+		process.nextTick @~tick unless @paused
 
-	generate: (i,out)->
-		out Math.random!, Math.random!
+	generate: (i,out)-> [Math.random!, Math.random!]

@@ -1,9 +1,9 @@
 (function(){
-  var Serve, Static, Redirect, Template, Reader, WavOutput, Sine, Coco, cluster, os, conf, cpu, app, _ref, _i, _len;
+  var Serve, Static, Redirect, Template, Reader, WavOutput, SweepSquare, Coco, cluster, os, conf, cpu, app, _ref, _i, _len;
   _ref = require('sabor'), Serve = _ref.Serve, Static = _ref.Static, Redirect = _ref.Redirect, Template = _ref.Template;
   Reader = require('q-io').Reader;
   WavOutput = require("./wavoutput").WavOutput;
-  Sine = require("./sine").Sine;
+  SweepSquare = require("./sweepsquare").SweepSquare;
   Coco = require('coco');
   cluster = require('cluster');
   os = require('os');
@@ -24,7 +24,7 @@
       },
       "/sound": function(req, length){
         var wav;
-        wav = new Sine(length);
+        wav = new SweepSquare(0.5, 440);
         return {
           body: Reader(wav),
           status: 200,

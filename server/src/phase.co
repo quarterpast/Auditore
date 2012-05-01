@@ -1,0 +1,10 @@
+{WavOutput} = require "./wavoutput"
+exports.twopi = 2*Math.PI
+
+class exports.Phase extends WavOutput
+	rawphase:0
+	phase: 0
+	generate: ->
+		@rawphase = @phase += twopi*@f/@rate
+		@phase -= twopi if @phase > twopi
+		[0,0]

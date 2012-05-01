@@ -1,9 +1,8 @@
-{WavOutput} = require "./wavoutput"
+{Phase,twopi} = require "./phase"
 
-class exports.Sine extends WavOutput
-	(l,@A,@f)-> super l
-	phase:0
-	generate: (t,out)->
-		y = @A * Math.sin(@phase)
-		@phase += 2*Math.PI*@f/@rate
-		out s,s
+class exports.Sine extends Phase
+	(@A,@f)-> super!
+	generate: (t)->
+		y = @A * Math.sin @phase
+		super ...
+		[y,y]

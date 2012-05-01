@@ -1,0 +1,7 @@
+{Square} = require "./square"
+
+class exports.SweepSquare extends Square
+	-> super ...
+	generate: (t)->
+		@work = 0.1*@rawphase/Math.PI % 2
+		super ...

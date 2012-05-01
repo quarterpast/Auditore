@@ -1,0 +1,10 @@
+{Phase,twopi} = require "./phase"
+
+class exports.Square extends Phase
+	(@A,@f,@work=1)-> super!
+	rawphase:0
+	phase:0
+	generate: (t)->
+		super ...
+		y = if @phase < @work*Math.PI then @A else -@A
+		[y,y]

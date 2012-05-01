@@ -14,7 +14,7 @@
     prototype.readable = true;
     function WavOutput(length, rate, channels, bytes){
       var _this = this;
-      this.length = length != null ? length : 30;
+      this.length = length != null ? length : 120;
       this.rate = rate != null ? rate : 44100;
       this.channels = channels != null ? channels : 2;
       this.bytes = bytes != null ? bytes : 2;
@@ -39,34 +39,33 @@
       return process.nextTick(__bind(this, 'tick'));
     };
     prototype.normalise = function(it){
-      return (1 + it) * Math.pow(2, this.bytes * 8 - 1);
+      return Math.floor((1 + it) * Math.pow(2, this.bytes * 8 - 1));
     };
     prototype.cursor = 0;
     prototype.off = 0;
     prototype.tick = function(){
-      var _this = this;
-      return this.generate(this.cursor++, function(l, r){
-        var _ref, _ref2;
-        _ref2 = [(_ref = _this.normalise)[l], _ref[r]], l = _ref2[0], r = _ref2[1];
-        if (_this.off >= _this.bytes * _this.channels * CHUNK_SIZE) {
-          _this.emit('data', _this.runningBuf);
-          _this.runningBuf = new Buffer(_this.bytes * _this.channels * CHUNK_SIZE);
-          _this.off = 0;
-        }
-        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](l, _this.off);
-        _this.off += _this.bytes;
-        _this.runningBuf["writeUInt" + _this.bytes * 8 + "LE"](r, _this.off);
-        _this.off += _this.bytes;
-        if (_this.cursor === _this.samples) {
-          _this.emit('end');
-        }
-        if (!_this.paused) {
-          return process.nextTick(__bind(_this, 'tick'));
-        }
-      });
+      var l, r, _ref;
+      _ref = this.generate(this.cursor++), l = _ref[0], r = _ref[1];
+      l = this.normalise(l);
+      r = this.normalise(r);
+      if (this.off >= this.bytes * this.channels * CHUNK_SIZE) {
+        this.emit('data', this.runningBuf);
+        this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
+        this.off = 0;
+      }
+      this.runningBuf["writeUInt" + this.bytes * 8 + "LE"](l, this.off);
+      this.off += this.bytes;
+      this.runningBuf["writeUInt" + this.bytes * 8 + "LE"](r, this.off);
+      this.off += this.bytes;
+      if (this.cursor === this.samples) {
+        this.emit('end');
+      }
+      if (!this.paused) {
+        return process.nextTick(__bind(this, 'tick'));
+      }
     };
     prototype.generate = function(i, out){
-      return out(Math.random(), Math.random());
+      return [Math.random(), Math.random()];
     };
     return WavOutput;
   }(Stream));

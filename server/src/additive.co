@@ -1,0 +1,18 @@
+{WavOutput} = require "./wavoutput"
+{Sine} = require "./sine"
+
+class exports.Additive extends WavOutput
+	(...osc)-> 
+		@oscillators = []
+		for [a,f] of osc
+			sine = new Sine a,f
+			sine.pause!
+			@oscillators.push sine
+		super!
+	generate: (i)->
+		l = r = 0
+		for osc of @oscillators
+			[lo,ro] = osc.generate i
+			l += lo/@oscillators.length
+			r += ro/@oscillators.length
+		[l,r]

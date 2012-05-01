@@ -1,23 +1,22 @@
 (function(){
-  var WavOutput, Sine;
-  WavOutput = require("./wavoutput").WavOutput;
+  var Phase, twopi, Sine, _ref;
+  _ref = require("./phase"), Phase = _ref.Phase, twopi = _ref.twopi;
   exports.Sine = Sine = (function(superclass){
     Sine.displayName = 'Sine';
     var prototype = __extend(Sine, superclass).prototype, constructor = Sine;
-    function Sine(l, A, f){
+    function Sine(A, f){
       this.A = A;
       this.f = f;
-      superclass.call(this, l);
+      superclass.call(this);
     }
-    prototype.phase = 0;
-    prototype.generate = function(t, out){
+    prototype.generate = function(t){
       var y;
       y = this.A * Math.sin(this.phase);
-      this.phase += 2 * Math.PI * this.f / this.rate;
-      return out(s, s);
+      superclass.prototype.generate.apply(this, arguments);
+      return [y, y];
     };
     return Sine;
-  }(WavOutput));
+  }(Phase));
   function __extend(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;
