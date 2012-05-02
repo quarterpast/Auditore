@@ -1,6 +1,6 @@
 (function(){
-  var WavOutput, twopi, Phase;
-  WavOutput = require("./wavoutput").WavOutput;
+  var StreamGenerator, twopi, Phase;
+  StreamGenerator = require("./streamgenerator").StreamGenerator;
   exports.twopi = twopi = 2 * Math.PI;
   exports.Phase = Phase = (function(superclass){
     Phase.displayName = 'Phase';
@@ -18,7 +18,7 @@
       return [0, 0];
     };
     return Phase;
-  }(WavOutput));
+  }(StreamGenerator));
   function __extend(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

@@ -1,7 +1,7 @@
-{WavOutput} = require "./wavoutput"
+{StreamGenerator} = require "./streamgenerator"
 {Sine} = require "./sine"
 
-class exports.Additive extends WavOutput
+class exports.Additive extends StreamGenerator
 	(...osc)-> 
 		@oscillators = []
 		for [a,f] of osc

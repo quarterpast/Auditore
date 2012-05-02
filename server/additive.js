@@ -1,6 +1,6 @@
 (function(){
-  var WavOutput, Sine, Additive, __slice = [].slice;
-  WavOutput = require("./wavoutput").WavOutput;
+  var StreamGenerator, Sine, Additive, __slice = [].slice;
+  StreamGenerator = require("./streamgenerator").StreamGenerator;
   Sine = require("./sine").Sine;
   exports.Additive = Additive = (function(superclass){
     Additive.displayName = 'Additive';
@@ -29,7 +29,7 @@
       return [l, r];
     };
     return Additive;
-  }(WavOutput));
+  }(StreamGenerator));
   function __extend(sub, sup){
     function fun(){} fun.prototype = (sub.superclass = sup).prototype;
     (sub.prototype = new fun).constructor = sub;

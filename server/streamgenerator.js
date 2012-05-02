@@ -7,8 +7,15 @@
     CHUNK_SIZE = 800;
     prototype.readable = true;
     prototype.paused = false;
-    function StreamGenerator(){
-      process.nextTick(__bind(this, 'tick'));
+    function StreamGenerator(length, rate, channels, bytes){
+      this.length = length != null ? length : 120;
+      this.rate = rate != null ? rate : 44100;
+      this.channels = channels != null ? channels : 2;
+      this.bytes = bytes != null ? bytes : 2;
+      this.samples = this.length * this.rate;
+      this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
+      this.pad = this.bytes * this.channels * this.samples % 2;
+      this.byteLength = 4 + (8 + 16) + (8 + this.bytes * this.channels * this.samples + this.pad);
     }
     prototype.pause = function(){
       return this.paused = true;
@@ -21,7 +28,6 @@
       return Math.floor((1 + it) * Math.pow(2, this.bytes * 8 - 1));
     };
     prototype.cursor = 0;
-    prototype.soundoff = 0;
     prototype.off = 0;
     prototype.tick = function(){
       var l, r, _ref;
@@ -30,8 +36,6 @@
       r = this.normalise(r);
       if (this.off >= this.bytes * this.channels * CHUNK_SIZE) {
         this.emit('data', this.runningBuf);
-        this.runningBuf.copy(this.soundBuf, this.soundoff);
-        this.soundoff += this.runningBuf.length;
         this.runningBuf = new Buffer(this.bytes * this.channels * CHUNK_SIZE);
         this.off = 0;
       }

@@ -1,6 +1,6 @@
 {Serve,Static,Redirect,Template} = require \sabor
 {Reader} = require \q-io
-{WavOutput} = require "./wavoutput"
+{WavHead} = require "./wavhead"
 {SweepSquare} = require "./sweepsquare"
 Coco = require \coco
 cluster = require \cluster
@@ -19,12 +19,18 @@ else
 		"/": (req)-> 
 			Template "app/home.eco" .render!
 		"/sound": (req,length)->
-			wav = new SweepSquare 0.5,440
-			body: Reader wav
+			gen = new SweepSquare 0.5,440
+			wav = WavHead gen
+
+			body: (Reader gen).then (sound)->
+				buf = new Buffer gen.byteLength
+				wav.copy buf,0
+				sound.copy buf,wav.length
+				return buf
 			status: 200
 			headers:
 				\content-type :"audio/wave"
-				\content-length : wav.byteLength
+				\content-length : gen.byteLength
 
 		"/favicon.ico": ->Redirect "client/favicon.png"
 		"/static/(.*)": Static.dir "client"

@@ -4,7 +4,12 @@ class exports.StreamGenerator extends Stream
 	CHUNK_SIZE = 800
 	readable: true
 	paused: false
-	-> process.nextTick @~tick
+	(@length=120,@rate=44100,@channels=2,@bytes=2)->
+		@samples = @length*@rate
+		@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
+		@pad = @bytes*@channels*@samples % 2
+		@byteLength = 4+(8+16)+(8+@bytes*@channels*@samples+@pad)
+		#process.nextTick @~tick
 	pause: ->@paused = true
 	resume: ->
 		@paused = false
@@ -12,7 +17,6 @@ class exports.StreamGenerator extends Stream
 	normalise: -> Math.floor ((1+it)*Math.pow 2,@bytes*8-1)
 	# [-1,1] -> [0,2^@bytes*8]
 	cursor:0
-	soundoff:0
 	off:0
 	tick: ->
 		[l,r] = @generate @cursor++
@@ -20,8 +24,6 @@ class exports.StreamGenerator extends Stream
 		r = @normalise r
 		if @off >= @bytes*@channels*CHUNK_SIZE
 			@emit \data, @runningBuf
-			@runningBuf.copy @soundBuf,@soundoff
-			@soundoff += @runningBuf.length
 			@runningBuf = new Buffer @bytes*@channels*CHUNK_SIZE
 			@off = 0
 		@runningBuf."writeUInt#{@bytes*8}LE" l,@off
